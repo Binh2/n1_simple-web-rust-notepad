@@ -873,6 +873,7 @@ name = "n1_simple-web-rust-notepad"
 version = "0.1.0"
 dependencies = [
  "leptos",
+ "wasm-bindgen",
 ]
 
 [[package]]

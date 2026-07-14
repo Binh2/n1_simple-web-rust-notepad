@@ -1,9 +1,11 @@
 use leptos::prelude::*;
 use leptos::leptos_dom::logging::*;
-use leptos::html::{button, p, textarea};
-use leptos::ev;
-use leptos::control_flow::{For, ForProps};
-use leptos::svg::text;
+use leptos::control_flow::{For, };
+use leptos::web_sys::HtmlInputElement;
+use leptos::web_sys;
+use wasm_bindgen::{JsCast, JsValue};
+use leptos::ev::{self, MouseEvent};
+use leptos::html;
 
 fn main() {
     leptos::mount::mount_to_body(|| view! { <App></App> })
@@ -14,32 +16,6 @@ struct TextEditorStruct {
     id: usize,
     title: RwSignal<String>,
     text: RwSignal<String>
-}
-
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-struct Counter {
-  id: usize,
-  count: RwSignal<i32>
-}
-
-#[component]
-fn Counters() -> impl IntoView {
-  let (counters, set_counters) = create_signal::<Vec<Counter>>(vec![]);
-
-  view! {
-      <div>
-          <For
-              // a function that returns the items we're iterating over; a signal is fine
-              each=move || counters.get()
-              // a unique key for each item
-              key=|counter| counter.id
-              // renders each item to a view
-              children=move |counter: Counter| {
-                  view! { <button>"Value: " {move || counter.count.get()}</button> }
-              }
-          />
-      </div>
-  }
 }
 
 fn create_text_editor(id: usize) -> TextEditorStruct {
@@ -62,14 +38,38 @@ fn App() -> impl IntoView {
     let (id_counter, set_id_counter) = signal(3);
     let (text_editors, set_text_editors) = create_signal::<Vec<TextEditorStruct>>(initial_text_editors);
 
-    let add_text_editor = move |_| {
-        set_text_editors.update(|vec| {
-            vec.push(create_text_editor(id_counter.get()));
-            set_id_counter.update(|counter| *counter += 1);
-        })
+    let active_text_editor = Memo::new(move |_| text_editors.get().into_iter().find(|text_editor| text_editor.id == active_id.get()));
+
+    
+
+    let active_textarea: NodeRef<html::Textarea> = NodeRef::new();
+    let add_tab = move |_: MouseEvent| {
+        set_text_editors
+            .update(|vec| {
+                vec.push(create_text_editor(id_counter.get()));
+                set_active_id.update(move |id| *id = id_counter.get());
+                set_id_counter.update(|counter| *counter += 1);
+            });
+        let Some(textarea) = active_textarea.get() else {
+            return;
+        };
+        let _ = textarea.focus();
     };
 
-    let active_text_editor = Memo::new(move |_| text_editors.get().into_iter().find(|text_editor| text_editor.id == active_id.get()));
+    window_event_listener(ev::keydown, move |evt: ev::KeyboardEvent| {
+        if evt.ctrl_key() && evt.key() == "." {
+            evt.prevent_default();
+            set_active_id.update(|id| *id =  (*id + 1) % id_counter.get());
+        }
+        if evt.ctrl_key() && evt.key() == "," {
+            evt.prevent_default();
+            set_active_id.update(|id| *id =  (*id + id_counter.get() - 1) % id_counter.get());
+        }
+        if evt.ctrl_key() && evt.key() == "/" {
+            evt.prevent_default();
+            add_tab(MouseEvent::new("click").unwrap());
+        }
+    });
 
     view! {
         <For
@@ -78,66 +78,55 @@ fn App() -> impl IntoView {
             children=move |text_editor: TextEditorStruct| {
                 view! {
                     <input
-                        class=""
+                        id=move || text_editor.id
+                        class="text-editor__tab-title"
+                        class:text-editor__tab-title--active=move || text_editor.id == active_id.get()
                         value=move || text_editor.title.get()
                         on:click=move |e| {
-                            set_active_id.set(1);
-                            console_log(&*format!("Active id: {}", 1));
+                            let Some(t) = e.target() else {
+                                return;
+                            };
+                            let Ok(el) = t.clone().dyn_into::<HtmlInputElement>() else {
+                                return;
+                            };
+                            let Ok(id) = el.id().parse::<usize>() else {
+                                return;
+                            };
+                            set_active_id.set(id);
                         }
                     />
                 }
             }
         />
-        <button on:click=add_text_editor>"+"</button>
+        <button on:click=add_tab class="text-editor__tab-title text-editor__tab-title--add-button">
+            "+"
+        </button>
+
         <br />
-        <For
-            each=move || text_editors.get()
-            key=|text_editor| text_editor.id
-            children=move |text_editor: TextEditorStruct| {
-                view! { <textarea>{move || text_editor.text.get()}</textarea> }
-            }
-        />
-        <br />
+
         <Show when=move || active_text_editor.get().is_some() fallback=|| view! { <></> }>
-            <textarea on:input=move |e| {
-                active_text_editor.get().unwrap().text.set(event_target_value(&e))
-            }>{active_text_editor.get().unwrap().text.get()}</textarea>
+            <textarea
+                node_ref=active_textarea
+                class="text-editor__textarea"
+                on:input=move |e| {
+                    active_text_editor.get().unwrap().text.set(event_target_value(&e))
+                }
+                prop:value=move || {
+                    let Some(text_editor) = active_text_editor.get() else {
+                        return String::new();
+                    };
+                    return text_editor.text.get();
+                }
+                autofocus
+            ></textarea>
         </Show>
+        <div>
+            <p>
+                <strong>"Shortcuts"</strong>
+            </p>
+            <p>"Ctrl + ,: Previous tab"</p>
+            <p>"Ctrl + .: Next tab"</p>
+            <p>"Ctrl + /: New tab"</p>
+        </div>
     }
-}
-
-fn Tab() -> impl IntoView {
-    let (title, setTitle) = signal(String::from("New document"));
-    let (text, setText) = signal(String::from(""));
-    let first_word = move || {
-        text.with(|t| {
-            let first_word = t.split(' ').next().unwrap_or("");
-            format!("{:.6}", first_word)
-        })
-    };
-    
-    (
-        p()
-            .class("tab__title")
-            .child(first_word()),
-        TextEditor(text, setText)
-    )
-}
-
-fn TextEditor(text: ReadSignal<String>, setText: WriteSignal<String>) -> impl IntoView {
-    // let print_screen = move |_| console_log(text.get().as_str());
-
-    (
-        textarea()
-            .attr("placeholder", "Give me some text...")
-            .attr("class", "text-editor__textarea")
-            .attr("autofocus", true)
-            .prop("value", move || text.get())
-            .on(ev::input, move |e| { setText.set(event_target_value(&e)); } )
-            .on(ev::input, move |e| { console_log(text.get().as_str())} )
-,
-        p()
-            .child(text.get())
-    )
-
 }
