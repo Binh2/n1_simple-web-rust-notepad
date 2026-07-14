@@ -24,7 +24,6 @@ const TITLES: &[&str] = &[ "Quick notes", "To-do", "Scratchpad", "Brainstorms", 
 fn create_text_editor(id: usize) -> TextEditorStruct {
     let mut rng = rand::rng();
     let title = TITLES.choose(&mut rng).unwrap_or(&"Error :)");
-    console_log(title);
 
     TextEditorStruct {
         id: id,
