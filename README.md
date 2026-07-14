@@ -7,6 +7,7 @@ In the future, I could add cache, so the notes is save locally on the user's bro
 # Demo
 
 Check out my website at [https://binh2.github.io/n1_simple-web-rust-notepad/](https://binh2.github.io/n1_simple-web-rust-notepad/)
+![Screenshot of the demo](https://raw.githubusercontent.com/Binh2/n1_simple-web-rust-notepad/main/demo.png)
 
 # How to run this project locally
 
