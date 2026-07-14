@@ -4,6 +4,19 @@ This project is a notepad with tabs. No save features yet. It is made in Rust Le
 
 In the future, I could add cache, so the notes is save locally on the user's browser.
 
+# How to run this project locally
+
+`git clone https://github.com/Binh2/n1_simple-web-rust-notepad.git`
+to clone the project locally
+
+`cd n1_simple-web-rust-notepad`
+to go to n1_simple-web-rust-notepad directory
+
+`trunk serve --open`
+to install all the dependencies and run a server locally
+
+Open your browser to localhost:8080 to access the website
+
 # What I learned
 
 1. Rust
