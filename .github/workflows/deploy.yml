@@ -31,7 +31,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Install Trunk Compiler
-        run: wget -qO- https://github.com | tar -xzf- -C /usr/local/bin
+        run: cargo install trunk
 
       - name: Build Production Release Assets
         # Compiles the final standalone HTML, CSS, and WASM into the "/dist" directory
