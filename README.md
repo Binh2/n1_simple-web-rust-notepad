@@ -36,6 +36,12 @@ Open your browser to localhost:8080 to access the website
     * Event listener
     * Node ref
 
+# Technologies used
+
+* Rust
+* Rust Leptos
+* Vanilla CSS (BEM naming convention)
+
 # Time to complete
 
 3 days
