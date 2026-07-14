@@ -1,8 +1,12 @@
 # Introduction
 
-This project is a notepad with tabs. No save features yet. It is made in Rust Leptos. Just exclusively client-side for now.
+This project is a web notepad with tabs. No save features yet. It is made in Rust Leptos. Just exclusively client-side for now.
 
 In the future, I could add cache, so the notes is save locally on the user's browser.
+
+# Demo
+
+Check out my website at [https://binh2.github.io/n1_simple-web-rust-notepad/](https://binh2.github.io/n1_simple-web-rust-notepad/)
 
 # How to run this project locally
 
@@ -30,6 +34,10 @@ Open your browser to localhost:8080 to access the website
     * Component
     * Event listener
     * Node ref
+
+# Time to complete
+
+3 days
 
 # Contributers
 
